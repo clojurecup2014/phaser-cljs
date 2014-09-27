@@ -150,6 +150,17 @@
   (-> @game .-add (.audio (name k))))
 
 
+;;; This is heavy
+(defn add-particle-emitter! [k]
+  (doto (-> @game .-add (.emitter 0 0 50))
+    (.makeParticles (name k))))
+
+(defn emit-particle! [pe x y]
+  (set! (.-x pe) x)
+  (set! (.-y pe) y)
+  (.start pe  true 500 nil 10))
+
+
 
 
 ;;;
@@ -175,4 +186,13 @@
 
 (defn debug-text! [text x y]
   (-> @game .-debug (.text text x y)))
+
+
+
+
+
+
+
+
+
 
