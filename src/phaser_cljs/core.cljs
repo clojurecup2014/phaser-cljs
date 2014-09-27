@@ -146,6 +146,11 @@
                       } (or style {}))]
     (-> @game .-add (.text x y text (clj->js style)))))
 
+(defn add-audio! [k]
+  (-> @game .-add (.audio (name k))))
+
+
+
 ;;;
 ;;; Debug
 ;;;
