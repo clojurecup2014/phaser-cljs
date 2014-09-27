@@ -111,12 +111,12 @@
         margin (or margin 0)
         spacing (or spacing 0)]
     (-> @game .-load (.spritesheet (name k)
-                                  (asset-path file)
-                                  frame-w
-                                  frame-h
-                                  frame-max
-                                  margin
-                                  spacing))))
+                                   (asset-path file)
+                                   frame-w
+                                   frame-h
+                                   frame-max
+                                   margin
+                                   spacing))))
 
 
 
