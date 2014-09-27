@@ -1,5 +1,4 @@
-(ns phaser-cljs.core
-  (:require-macros [phaser-cljs.macros :as m]))
+(ns phaser-cljs.core)
 
 
 
