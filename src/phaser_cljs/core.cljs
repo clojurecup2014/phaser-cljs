@@ -8,7 +8,7 @@
 (defn get-aspect-ratio []
   (/ @screen-w @screen-h))
 
-(defn init [logical-w logical-h target-id]
+(defn init! [logical-w logical-h target-id]
   (let [g (js/Phaser.Game logical-w logical-h Phaser.CANVAS target-id nil false false)]
     (reset! screen-w logical-w)
     (reset! screen-h logical-h)
