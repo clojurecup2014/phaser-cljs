@@ -151,6 +151,24 @@
 
 
 
+
+;;;
+;;; Input
+;;;
+
+(defn kbd [k]
+  (aget js/Phaser.Keyboard (name k)))
+
+(defn add-key-capture! [& ks]
+  (-> @game .-input .-keyboard (.addKeyCapture (clj->js (map kbd ks)))))
+
+
+(defn is-key-down? [k]
+  (-> @game .-input .-keyboard (.isDown (kbd k))))
+
+
+
+
 ;;;
 ;;; Debug
 ;;;
