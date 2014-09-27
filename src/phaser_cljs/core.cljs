@@ -78,6 +78,9 @@
     (handle)))
 
 
+(defn disable-visibility-change! [bool]
+  (set! (.-disableVisibilityChange (.-stage @game)) bool))
+
 
 ;;;
 ;;; State
@@ -136,6 +139,17 @@
       (set! (.-height sp) sprite-height))
     sp))
 
+(defn add-text! [text x y & [style]]
+  (let [style (merge {:font "16px monospace"
+                      :fill "#FFFFFF"
+                      :align "center"
+                      } (or style {}))]
+    (-> @game .-add (.text x y text (clj->js style)))))
 
+;;;
+;;; Debug
+;;;
 
+(defn debug-text! [text x y]
+  (-> @game .-debug (.text text x y)))
 
