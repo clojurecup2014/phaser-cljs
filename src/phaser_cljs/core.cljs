@@ -1,27 +1,142 @@
 (ns phaser-cljs.core
   (:require-macros [phaser-cljs.macros :as m]))
 
+
+
+(def dom-id (atom nil))
 (def game (atom nil))
 
 (def screen-w (atom 0))
 (def screen-h (atom 0))
-(defn get-aspect-ratio []
-  (/ @screen-w @screen-h))
+(def aspect-ratio (atom 0))
+
+(def asset-dir (atom "."))
+(defn asset-path [filename]
+  (str @asset-dir "/" filename))
 
 
-(defn init! [logical-w logical-h target-id]
-  (let [g (js/Phaser.Game logical-w logical-h Phaser.CANVAS target-id nil false false)]
+
+;;;
+;;; Initialization
+;;;
+
+(defn init! [logical-w logical-h target-id asset-dir-path]
+  (let [g (js/Phaser.Game. logical-w logical-h Phaser.CANVAS target-id nil false false)]
+    (reset! dom-id target-id)
     (reset! screen-w logical-w)
     (reset! screen-h logical-h)
     (reset! game g)
+    (reset! aspect-ratio (/ logical-w logical-h))
+    (reset! asset-dir asset-dir-path)
     nil))
 
 
-(defn start-state! [k]
-  (-> @game .state (.start (name k))))
+(defn- calc-screen [new-screen-w new-screen-h]
+  (let [current-aspect-ratio (/ new-screen-w new-screen-h)]
+    (if (= @aspect-ratio current-aspect-ratio)
+      [new-screen-w new-screen-h 0 0]
+      (if (< @aspect-ratio current-aspect-ratio)
+        (let [w (* new-screen-h @aspect-ratio)
+              h new-screen-h
+              left (/ (- new-screen-w w) 2)
+              top 0]
+          [w h left top])
+        (let [w new-screen-w
+              h (/ new-screen-w @aspect-ratio)
+              left 0
+              top (/ (- new-screen-h h) 2)]
+          [w h left top])))))
 
+(defn set-resize-handler! []
+  (let [;; EXACT_FIT or NO_SCALE or RESIZE or SHOW_ALL
+        mode js/Phaser.ScaleManager.SHOW_ALL
+        handle (fn []
+                 (let [dom (js/document.getElementById @dom-id)
+                       ;; NB: Can get margin/padding
+                       new-screen-w js/document.documentElement.clientWidth
+                       new-screen-h js/document.documentElement.clientHeight
+                       [w h left top] (calc-screen new-screen-w new-screen-h)]
+                   (set! dom.style.marginLeft (str left "px"))
+                   (set! dom.style.marginTop (str top "px"))
+                   (set! (.-width @game) w)
+                   (set! (.-height @game) h)
+                   (set! (.-width (.-canvas @game)) w)
+                   (set! (.-height (.-canvas @game)) h)
+                   (-> @game .-world (.setBounds 0 0 @screen-w @screen-h))
+                   (set! (.-width (.-scale @game)) w)
+                   (set! (.-height (.-scale @game)) h)
+                   (-> @game .-renderer (.resize @screen-w @screen-h))
+                   (-> @game .-scale (.setSize))
+                   (-> @game .-camera (.setSize @screen-w @screen-h))
+                   (-> @game .-camera (.setBoundsToWorld))
+                   (js/Phaser.Canvas.setSmoothingEnabled
+                     (-> @game .-context)
+                     (-> @game .-antialias))
+                   nil))]
+    (set! (.-scaleMode (.-scale @game)) mode)
+    (set! (.-onResize (.-scale @game)) handle)
+    ;; Run once
+    (handle)))
+
+
+
+;;;
+;;; State
+;;;
+
+(defn start-state! [k]
+  (-> @game .-state (.start (name k))))
 
 (defn add-state!
   "Usage: (add-state! :state-name {:preload #(...), :create #(...), :update #(...)})"
   [k m]
-  (-> @game .state (.add (name k) (clj->js m))))
+  (-> @game .-state (.add (name k) (clj->js m))))
+
+
+
+;;;
+;;; Loader
+;;;
+
+;;; TODO: Verify loaded keys when using
+
+(defn load-audio! [k & files]
+  (-> @game .-load (.audio (name k) (clj->js (map asset-path files)))))
+
+(defn load-image! [k file]
+  (-> @game .-load (.image (name k) (asset-path file))))
+
+(defn load-spritesheet! [k file frame-w frame-h & [frame-max margin spacing]]
+  (let [frame-max (or frame-max -1)
+        margin (or margin 0)
+        spacing (or spacing 0)]
+    (-> @game .-load (.spritesheet (name k)
+                                  (asset-path file)
+                                  frame-w
+                                  frame-h
+                                  frame-max
+                                  margin
+                                  spacing))))
+
+
+
+
+;;;
+;;; Adder
+;;;
+
+
+(defn add-sprite! [k x y & [sprite-width sprite-height anchor-x anchor-y]]
+  (let [anchor-x (or anchor-x 0.5)
+        anchor-y (or anchor-y anchor-x)
+        sp (-> @game .-add (.sprite x y (name k)))]
+    (.setTo (.-anchor sp) anchor-x anchor-y)
+    (when (and sprite-width)
+      (set! (.-width sp) sprite-width))
+    (when (and sprite-height)
+      (set! (.-height sp) sprite-height))
+    sp))
+
+
+
+
