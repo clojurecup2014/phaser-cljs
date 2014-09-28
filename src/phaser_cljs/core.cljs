@@ -57,8 +57,8 @@
                        [w h left top] (calc-screen new-screen-w new-screen-h)]
                    (set! dom.style.marginLeft (str left "px"))
                    (set! dom.style.marginTop (str top "px"))
-                   (set! (.-width @game) w)
-                   (set! (.-height @game) h)
+                   (set! (.-width @game) @screen-w)
+                   (set! (.-height @game) @screen-h)
                    (set! (.-width (.-canvas @game)) w)
                    (set! (.-height (.-canvas @game)) h)
                    (-> @game .-world (.setBounds 0 0 @screen-w @screen-h))
