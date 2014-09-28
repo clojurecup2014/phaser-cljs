@@ -151,14 +151,17 @@
 
 
 ;;; This is heavy
-(defn add-particle-emitter! [k]
-  (doto (-> @game .-add (.emitter 0 0 50))
-    (.makeParticles (name k))))
+(defn add-particle-emitter! [k & [max-number]]
+  (let [max-number (or max-number 50)]
+    (doto (-> @game .-add (.emitter 0 0 max-number))
+      (.makeParticles (name k)))))
 
-(defn emit-particle! [pe x y]
-  (set! (.-x pe) x)
-  (set! (.-y pe) y)
-  (.start pe  true 500 nil 10))
+(defn emit-particle! [pe x y & [lifespan quantity]]
+  (let [lifespan (or lifespan 500)
+        quantity (or quantity 10)]
+    (set! (.-x pe) x)
+    (set! (.-y pe) y)
+    (.start pe true lifespan nil quantity)))
 
 
 
